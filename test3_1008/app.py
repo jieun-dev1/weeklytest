@@ -14,22 +14,21 @@ def index():
     return render_template('index.html')
 
 
+idx = db.post.count()
+
+
 @app.route('/post', methods=['POST'])
 def save_post():
     title = request.form.get('title')
     content = request.form.get('content')
-    post_count = db.post.count()
-    if post_count == 0:
-        max_value = 1
-    else:
-        max_value = db.post.find_one(sort=[("idx", -1)])['idx'] + 1
-
+    idx = idx + 1
     post = {
-        'idx': max_value,
-        'title': title,
-        'content': content,
-        'reg_date': datetime.now()
-    }
+            'idx': idx,
+            'title': title,
+            'content': content,
+            'reg_date': datetime.now()
+        }
+
     db.post.insert_one(post)
     return {"result": "success"}
 
@@ -60,8 +59,7 @@ def update_like():
         if action_receive == "read":
             db.reads.insert_one(doc)
         else:
-
-        count = db.reads.count_documents({"_id": id_receive, "action": action_receive})
+            count = db.reads.count_documents({"_id": id_receive, "action": action_receive})
         return jsonify({"result": "success", 'msg': 'updated', "count": count})
 
 
@@ -73,4 +71,4 @@ def update_like():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    app.run(host="0.0.0.0", port=8080)
