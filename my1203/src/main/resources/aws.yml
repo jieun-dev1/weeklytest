@@ -1,0 +1,11 @@
+cloud:
+  aws:
+    credentials:
+      accessKey:AKIA43IGQ4E7NURGBQON
+      secretKey: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
+    s3:
+      bucket: bestmeal
+    region:
+      static: ap-northeast-2
+    stack:
+      auto: false
