@@ -29,8 +29,8 @@
     <!-- 구글폰트 -->
     <link href="https://fonts.googleapis.com/css?family=Stylish&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.1.1/socket.io.js"></script>
-    <link rel="stylesheet" href="bootstrap-tagsinput.css">
-    <script src="bootstrap-tagsinput.js"></script>
+    <link rel="stylesheet" href="css/bootstrap-tagsinput.css">
+    <script src="js/bootstrap-tagsinput.js"></script>
 
     <title>내배캠 | 타임어택</title>
     <style type="text/css">
@@ -50,70 +50,30 @@
             border: black solid;
             border-radius: 5px;
         }
+
+
     </style>
     <script>
+
         $(document).ready(function () {
             getArticles();
 
-            $.ajax({
-                type: "GET",
-                url: "/user/signup",
-                success: function (response) {
-                    console.log(response);
+            // $("#username").html(localStorage.getItem("username"));
+            $("#logout-text").click(function(){
+                localStorage.removeItem("token");
+                localStorage.removeItem("username");
+                location.href = 'index.html';
+            });
 
-                    let temp = `
-
-<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLabel">New message</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <form>
-          <div class="form-group">
-            <label for="recipient-name" class="col-form-label">Recipient:</label>
-            <input type="text" class="form-control" id="recipient-name">
-          </div>
-          <div class="form-group">
-            <label for="message-text" class="col-form-label">Message:</label>
-            <textarea class="form-control" id="message-text"></textarea>
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary">Send message</button>
-      </div>
-    </div>
-  </div>
-</div>`
-
-                    // let temp = `
-                    //             <div class="modal fade" id="exampleModal">
-                    //                 <div class="modal-dialog">
-                    //                     <div class="modal-content">
-                    //                         <div class="modal-header">
-                    //                             <h5 class="modal-title" id="exampleModalLabel">회원가입</h5>
-                    //                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    //                         </div>
-                    //                         <ul class="list-group" id="comment-list">
-                    //                             <li class="list-group-item">댓글</li>
-                    //                         </ul>
-                    //                         <div class="modal-footer">
-                    //                             <textarea class="form-control" id="comment" rows="3"></textarea>
-                    //                             <button type="button" class="btn btn-primary" onclick="setArticleComment()">댓글작성</button>
-                    //                         </div>
-                    //                     </div>
-                    //                 </div>
-                    //             </div>
-                    //                 `
-                    $('#signup').append(temp);
+            $.ajaxPrefilter(function( options, originalOptions, jqXHR ) {
+                if(localStorage.getItem('token')) {
+                    jqXHR.setRequestHeader('Authorization', 'Bearer ' + localStorage.getItem('token'));
                 }
             });
+        })
+
+
+
 
         function openClose() {
             if ($("#post-box").css("display") == "block") {
@@ -126,13 +86,12 @@
                 $("#btn-post-box").text("포스팅 박스 닫기");
             }
         }
-
         function postingArticle() {
             var data = new FormData();
-            data.append( "title", $("#title").val() );
-            data.append( "content", $("#content").val() );
-            data.append( "tags", $("#tags").val() );
-            data.append( "image", $("#image")[0].files[0] );
+            data.append("title", $("#title").val());
+            data.append("content", $("#content").val());
+            data.append("tags", $("#tags").val());
+            data.append("image", $("#image")[0].files[0]);
 
             $.ajax({
                 type: "POST",
@@ -165,9 +124,9 @@
 
         function makeListPost(article, index) {
             let tags = '';
-            for(let i = 0 ;  i < article['tags'].length ; i++){
+            for (let i = 0; i < article['tags'].length; i++) {
                 console.log(article['tags'][i]);
-                tags += " #"+ article['tags'][i]['name'];
+                tags += " #" + article['tags'][i]['name'];
             }
 
             let tempHtml = ` <tr>
@@ -180,22 +139,152 @@
                     `;
             $("#list-post").append(tempHtml);
         }
+
+        //회원가입
+        //username 과 password 가 들어감. ajax signup 으로 보내주자.
+
+        function idCheck() {
+            let username = $("#signupusername").val();
+            if (username == "") {
+                $("#help-id").text("아이디를 입력해주세요").removeClass("is-safe").addClass("is-danger")
+                return;
+            }
+            let data = {"username":username};
+
+            $.ajax({
+                type:"POST",
+                url:"/user/idcheck",
+                contentType: "application/json",
+                data:JSON.stringify(data),
+                success: function (response) {
+                    if (response == true) {
+                        alert("아이디 중복")
+                        $("#help-id").text("이미 존재하는 아이디입니다").removeClass("is-safe").addClass("is-danger")
+                    } else {
+                        $("#help-id").text("사용할 수 있는 아이디입니다").removeClass("is-danger").addClass("is-success")
+
+                    }
+                }
+
+            })
+        }
+
+        function signup() {
+            let username = $("#signupusername").val();
+            let password = $("#signuppassword").val();
+
+            if ($("#signupusername").hasClass("is-danger")) {
+                alert("아이디를 다시 확인해주세요.")
+                return;
+            } else if (!$("#help-id").hasClass("is-success")) {
+                alert("아이디 중복확인을 해주세요.")
+                return;
+            }
+
+            let data = {
+                username:$("#signupusername").val(),
+                password:$("#signuppassword").val()
+            }
+
+
+            $.ajax({
+                type: "POST",
+                url: "/user/signup",
+                contentType: "application/json; charset=utf-8",
+                data:JSON.stringify(data),
+                success: function (response) {
+                    alert('회원가입이 완료되었습니다')
+                    window.location.reload("/index.html")
+                }
+            });
+        }
+
+        function login(){
+            let data = {
+                username:$("#loginusername").val(),
+                password:$("#loginpassword").val()
+            }
+            $.ajax({
+                type:"POST",
+                url:"/user/login",
+                contentType:"application/json; charset=utf-8",
+                data:JSON.stringify(data),
+                success: function(response) {
+                    localStorage.setItem("token", response['token']);
+                    localStorage.setItem("username", response['username']);
+                    alert('로그인 성공')
+                    window.location.reload("/index.html");
+                }
+
+            })
+        }
+
+
+
     </script>
 </head>
 <body>
+
 <div class="wrap">
     <div class="jumbotron">
         <h1 class="display-4">질문합시다!!</h1>
         <hr class="my-4">
         <p class="lead">
             <button onclick="openClose()" id="btn-post-box" type="button" class="btn btn-primary">포스팅 박스 열기</button>
-            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal" data-whatever="@mdo">로그인</button>
-            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal" data-whatever="@mdo">회원가입</button>
+<!--            <button id="login" type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal"-->
+<!--                    data-whatever="@mdo">로그인-->
+<!--            </button>-->
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#LoginModal" id="login">로그인</button>
+<!--            <button class="nav-button" data-bs-toggle="modal" data-bs-target="#LoginModal" id="login" onclick="styleReset()">로그인</button>-->
+            <button id="signup" type="button" class="btn btn-primary" data-toggle="modal" data-target="#SignupModal"
+                    data-whatever="@mdo">회원가입
+            </button>
+            <button type="button" class="btn btn-primary" data-target="#LoginModal" id="login">로그인</button>
 
         </p>
     </div>
 
+
     <!-- Modal -->
+    <div class="modal fade modal-signin" tabindex="-1" role="dialog" id="SignupModal"
+         aria-labelledby="exampleModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content rounded-5 shadow">
+                <div class="modal-header p-5 pb-4 border-bottom-0">
+                    <!-- <h5 class="modal-title">Modal title</h5> -->
+<!--                    <h2 class="fw-bold mb-0" style="display: none;" id="signUpText">회원가입</h2>-->
+                    <h2 class="fw-bold mb-0" id="signUpText">회원가입</h2>
+
+                    <!--                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>-->
+                </div>
+
+                <div class="modal-body p-5 pt-0">
+                    <div class="form-floating mb-3">
+                        <label for="signupusername">아이디</label>
+                        <input type="text" class="form-control rounded-4" id="signupusername"
+                               placeholder="아이디">
+                        <button class="btn btn-secondary" id="idCheckButton" onclick="idCheck()" >아이디 중복확인</button>
+                        <div class="text-muted help help-id" id="help-id">&nbsp;&nbsp;영문과 숫자 사용
+                            가능. 2-10자 길이<br/></div>
+<!--                        <div class="text-muted help help-id" style="display: none;" id="help-id">&nbsp;&nbsp;영문과 숫자 사용-->
+<!--                            가능. 2-10자 길이<br/></div>-->
+                    </div>
+                    <div class="form-floating mb-3">
+                        <label for="signuppassword">비밀번호</label>
+                        <input type="password" class="form-control rounded-4" id="signuppassword"
+                               placeholder="비밀번호">
+<!--                        <button class="w-100 mb-2 btn btn-lg rounded-4 btn-primary" onclick="login()" id="loginButton">-->
+<!--                            로그인-->
+<!--                        </button>-->
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-secondary" type="submit" onclick="signup()" id="SignupButton">회원가입</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal fade modal-signin" tabindex="-1" role="dialog" id="LoginModal"
          aria-labelledby="exampleModalLabel"
          aria-hidden="true">
@@ -203,79 +292,70 @@
             <div class="modal-content rounded-5 shadow">
                 <div class="modal-header p-5 pb-4 border-bottom-0">
                     <!-- <h5 class="modal-title">Modal title</h5> -->
-                    <h2 class="fw-bold mb-0" style="display: none;" id="signUpText">회원가입</h2>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <!--                    <h2 class="fw-bold mb-0" style="display: none;" id="signUpText">회원가입</h2>-->
+                    <h2 class="fw-bold mb-0" id="LoginText">로그인</h2>
+
+                    <!--                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>-->
                 </div>
 
                 <div class="modal-body p-5 pt-0">
-
                     <div class="form-floating mb-3">
+                        <label for="loginusername">아이디</label>
                         <input type="text" class="form-control rounded-4" id="loginusername"
                                placeholder="아이디">
-                        <label for="loginusername">아이디</label>
                     </div>
                     <div class="form-floating mb-3">
-                        <input type="password" class="form-control rounded-4" id="password"
+                        <label for="loginpassword">비밀번호</label>
+                        <input type="password" class="form-control rounded-4" id="loginpassword"
                                placeholder="비밀번호">
-
-                    <button class="w-100 mb-2 btn btn-lg rounded-4 btn-primary" style="display: none;"
-                            onclick="signup()" id="signupButton">회원가입하기
-                    </button>
-                    <button class="w-100 mb-2 btn btn-lg rounded-4 btn-primary" onclick="login()" id="loginButton">
-                        로그인
-                    </button>
-
-
-
-                    <button class="w-100 py-2 mb-2 btn btn-outline-primary rounded-4" type="submit"
-                            onclick="change()" id="toSignupButton">
-                        회원가입 하러가기
-                    </button>
-
-
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-secondary" type="submit" onclick="login()" id="LoginButton">로그인</button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="post-box" class="form-post" style="display:none">
-        <div>
-            <div class="form-group">
-                <label for="title">제목</label>
-                <input id="title" class="form-control" placeholder="">
+
+        <div id="post-box" class="form-post" style="display:none">
+            <div>
+                <div class="form-group">
+                    <label for="title">제목</label>
+                    <input id="title" class="form-control" placeholder="">
+                </div>
+                <div class="form-group">
+                    <label for="content">간단한 내용</label>
+                    <textarea id="content" class="form-control" rows="2"></textarea>
+                </div>
+                <div class="form-group">
+                    <input type="text" value="" id="tags" data-role="tagsinput" placeholder="tags"/>
+                </div>
+                <input type="file" id="image" name="image">
+                <button type="button" class="btn btn-primary" onclick="postingArticle()">기사저장</button>
             </div>
-            <div class="form-group">
-                <label for="content">간단한 내용</label>
-                <textarea id="content" class="form-control" rows="2"></textarea>
-            </div>
-            <div class="form-group">
-                <input type="text" value="" id="tags" data-role="tagsinput" placeholder="tags" />
-            </div>
-            <input type="file" id="image" name="image">
-            <button type="button" class="btn btn-primary" onclick="postingArticle()">기사저장</button>
         </div>
-    </div>
-    <table class="table">
-        <thead>
-        <tr>
-            <th scope="col">#</th>
-            <th scope="col">제목</th>
-            <th scope="col">글쓴이</th>
-            <th scope="col">댓글수</th>
-            <th scope="col">태그</th>
-            <th scope="col">등록일자</th>
-        </tr>
-        </thead>
-        <tbody id="list-post">
-        </tbody>
-    </table>
-    <div class="input-group mb-3" style="width: 20%;margin: 0% 30%;">
-        <input type="text" class="form-control" placeholder="태그" aria-label="태그" aria-describedby="basic-addon2" id="searchTag">
-        <div class="input-group-append">
-            <button class="btn btn-outline-secondary" type="button" onclick="getArticles()">검색</button>
+        <table class="table">
+            <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">제목</th>
+                <th scope="col">글쓴이</th>
+                <th scope="col">댓글수</th>
+                <th scope="col">태그</th>
+                <th scope="col">등록일자</th>
+            </tr>
+            </thead>
+            <tbody id="list-post">
+            </tbody>
+        </table>
+        <div class="input-group mb-3" style="width: 20%;margin: 0% 30%;">
+            <input type="text" class="form-control" placeholder="태그" aria-label="태그" aria-describedby="basic-addon2"
+                   id="searchTag">
+            <div class="input-group-append">
+                <button class="btn btn-outline-secondary" type="button" onclick="getArticles()">검색</button>
+            </div>
         </div>
     </div>
 </div>
-
 </body>
 </html>
