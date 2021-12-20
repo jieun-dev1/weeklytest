@@ -14,10 +14,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.security.authentication.AuthenticationManager;
 
 
@@ -47,9 +44,13 @@ public class UserController {
         return userService.toIdCheck(idCheckDto);
     }
 
-    @PostMapping("/user/login")
+    @RequestMapping(value = "/user/login", method = RequestMethod.POST)
+//    @PostMapping("/user/login")
     public ResponseEntity<?> createAuthenticationToken(@RequestBody UserDto userDto) throws Exception {
-        return userService.toCreateAuthenticationToken(userDto);
+        authenticate(userDto.getUsername(), userDto.getPassword());
+        final UserDetails userDetails = userDetailsService.loadUserByUsername(userDto.getUsername());
+        final String token = jwtTokenUtil.generateToken(userDetails);
+        return ResponseEntity.ok(new JwtResponse(token, userDetails.getUsername()));
     }
 
     public void authenticate(String username, String password) throws Exception {

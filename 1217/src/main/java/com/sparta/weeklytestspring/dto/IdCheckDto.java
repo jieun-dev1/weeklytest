@@ -6,5 +6,5 @@ import lombok.Setter;
 @Getter
 @Setter
 public class IdCheckDto {
-    public String username;
+    private String username;
 }
