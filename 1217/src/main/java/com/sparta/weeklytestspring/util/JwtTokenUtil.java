@@ -14,6 +14,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+
+//JWT 토큰 만들고, 토큰 정보 보고 유저 정보 알아내는. Expiration date 세팅 등.
 @Component
 public class JwtTokenUtil implements Serializable {
 
@@ -21,6 +23,7 @@ public class JwtTokenUtil implements Serializable {
 
     public static final long JWT_TOKEN_VALIDITY = 5 * 60 * 60;
 
+    //Bean이 application properties 에서 가져온다. 실제 프로젝트에서는 application properties가 실제 서버, 운영서버, 테스트 서버 등 application properties 가 많아지기 때문이다.
     @Value("${jwt.secret}")
     private String secret;
 

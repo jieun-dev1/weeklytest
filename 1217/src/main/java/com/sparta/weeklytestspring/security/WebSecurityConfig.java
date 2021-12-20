@@ -23,17 +23,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    @Bean
-    @Override
-    public AuthenticationManager authenticationManagerBean() throws Exception {
-        return super.authenticationManagerBean();
-    }
-
-    @Bean
-    public BCryptPasswordEncoder encodePassword() {
-        return new BCryptPasswordEncoder();
-    }
-
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.csrf().disable();
@@ -45,15 +34,17 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/user/signup").permitAll()
                 .antMatchers("/user/idcheck").permitAll()
                 .antMatchers("/user/login").permitAll()
-                .antMatchers("/**.html").permitAll()
                 .antMatchers("/").permitAll()
+//                .antMatchers("/**.html").permitAll()
 
                 //그 외 모든 요청은 인증과정 필요
                 .anyRequest().authenticated()
                 .and()
                 //jwt 인증 실패 -> authenticationEntrypoint
-                .exceptionHandling().authenticationEntryPoint(jwtAuthenticationEntryPoint).and().sessionManagement()
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .exceptionHandling().authenticationEntryPoint(jwtAuthenticationEntryPoint)
+                .and()
+                //Stateleess
+                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .formLogin()
                 .loginPage("/index.html")
@@ -66,7 +57,22 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .logoutUrl("/user/logout")
                 .permitAll();
 
+        //filter 란? controller 에서 API 호출 시, 필터링 하는 기능임. 이 request 에서 필터링 한다..
+        //ex. header에 authorization key 있는지 체크하려면? 접속한 url 이나 아이피 체크하고 싶을 떄 쓴다.
+        //UsernamePasswordAuthenticationFilter: username 과 password 세션이 있는지 체크. JWT 토큰이 있는 사람은 이 필터에서 세션 만들어줌.
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-
     }
+
+    @Bean
+    @Override
+    public AuthenticationManager authenticationManagerBean() throws Exception {
+        return super.authenticationManagerBean();
+    }
+
+    @Bean
+    public BCryptPasswordEncoder encodePassword() {
+        return new BCryptPasswordEncoder();
+    }
+
+
 }

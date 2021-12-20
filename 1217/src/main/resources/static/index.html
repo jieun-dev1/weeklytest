@@ -58,21 +58,20 @@
         $(document).ready(function () {
             getArticles();
 
-            // $("#username").html(localStorage.getItem("username"));
-            $("#logout-text").click(function(){
+
+            $("#logout").click(function(){
                 localStorage.removeItem("token");
                 localStorage.removeItem("username");
-                location.href = 'index.html';
-            });
-
-            $.ajaxPrefilter(function( options, originalOptions, jqXHR ) {
-                if(localStorage.getItem('token')) {
-                    jqXHR.setRequestHeader('Authorization', 'Bearer ' + localStorage.getItem('token'));
-                }
+                location.href = '/';
             });
         })
 
 
+        $.ajaxPrefilter(function( options, originalOptions, jqXHR ) {
+            if(localStorage.getItem('token')) {
+                jqXHR.setRequestHeader('Authorization', 'Bearer ' + localStorage.getItem('token'));
+            }
+        });
 
 
         function openClose() {
@@ -170,8 +169,6 @@
         }
 
         function signup() {
-            let username = $("#signupusername").val();
-            let password = $("#signuppassword").val();
 
             if ($("#signupusername").hasClass("is-danger")) {
                 alert("아이디를 다시 확인해주세요.")
@@ -190,11 +187,11 @@
             $.ajax({
                 type: "POST",
                 url: "/user/signup",
-                contentType: "application/json; charset=utf-8",
+                contentType: "application/json",
                 data:JSON.stringify(data),
                 success: function (response) {
                     alert('회원가입이 완료되었습니다')
-                    window.location.reload("/index.html")
+                    location.href = "/"
                 }
             });
         }
@@ -207,13 +204,15 @@
             $.ajax({
                 type:"POST",
                 url:"/user/login",
-                contentType:"application/json; charset=utf-8",
+                contentType:"application/json",
+                // contentType:"application/json; charset=utf-8",
                 data:JSON.stringify(data),
                 success: function(response) {
                     localStorage.setItem("token", response['token']);
                     localStorage.setItem("username", response['username']);
                     alert('로그인 성공')
-                    window.location.reload("/index.html");
+                    location.href = '/';
+                    // window.location.reload("/index.html");
                 }
 
             })
@@ -239,7 +238,7 @@
             <button id="signup" type="button" class="btn btn-primary" data-toggle="modal" data-target="#SignupModal"
                     data-whatever="@mdo">회원가입
             </button>
-            <button type="button" class="btn btn-primary" data-target="#LoginModal" id="login">로그인</button>
+            <button type="button" class="btn btn-primary" id="logout">로그아웃</button>
 
         </p>
     </div>
